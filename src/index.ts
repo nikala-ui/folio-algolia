@@ -8,4 +8,5 @@ export type {
   AlgoliaSearchResponse,
   FolioPage,
   FolioSearchAdapter,
+  FolioSearchContext,
 } from "./types.js";

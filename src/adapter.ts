@@ -1,12 +1,11 @@
-import type { SearchAdapter, SearchContext } from "@nikala-ui/folio";
 import { getAlgoliaEnv } from "./env.js";
 import { searchAlgolia } from "./client.js";
-import type { AlgoliaAdapterOptions } from "./types.js";
+import type { AlgoliaAdapterOptions, FolioSearchAdapter, FolioSearchContext } from "./types.js";
 
-export function createAlgoliaAdapter(options: AlgoliaAdapterOptions): SearchAdapter {
+export function createAlgoliaAdapter(options: AlgoliaAdapterOptions): FolioSearchAdapter {
   return {
     name: "algolia",
-    async search({ query, pages }: SearchContext) {
+    async search({ query, pages }: FolioSearchContext) {
       const normalizedQuery = query.trim();
       if (!normalizedQuery) return pages;
       return searchAlgolia(options, normalizedQuery, pages);
@@ -14,11 +13,11 @@ export function createAlgoliaAdapter(options: AlgoliaAdapterOptions): SearchAdap
   };
 }
 
-export function createAlgoliaAdapterFromEnv(): SearchAdapter {
+export function createAlgoliaAdapterFromEnv(): FolioSearchAdapter {
   return createAlgoliaAdapter(getAlgoliaEnv());
 }
 
-export const algoliaAdapter: SearchAdapter = {
+export const algoliaAdapter: FolioSearchAdapter = {
   name: "algolia",
   search(context) {
     return createAlgoliaAdapterFromEnv().search(context);
