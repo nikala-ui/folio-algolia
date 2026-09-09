@@ -1,4 +1,4 @@
-import type { PageData, SearchAdapter } from "@nikala-ui/folio";
+import type { PageData } from "@nikala-ui/folio";
 
 export interface AlgoliaAdapterOptions {
   appId: string;
@@ -19,5 +19,14 @@ export interface AlgoliaSearchResponse {
   hits?: AlgoliaHit[];
 }
 
-export type FolioSearchAdapter = SearchAdapter;
+export interface FolioSearchContext {
+  query: string;
+  pages: PageData[];
+}
+
+export interface FolioSearchAdapter {
+  name: string;
+  search: (context: FolioSearchContext) => PageData[] | Promise<PageData[]>;
+}
+
 export type FolioPage = PageData;
