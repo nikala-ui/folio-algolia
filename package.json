@@ -1,0 +1,43 @@
+{
+  "name": "@nikala-ui/folio-algolia",
+  "version": "0.1.0",
+  "description": "Algolia search adapter for Folio documentation sites",
+  "license": "MIT",
+  "type": "module",
+  "keywords": ["folio", "algolia", "search", "documentation", "solidjs"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikala-ui/folio-algolia.git"
+  },
+  "homepage": "https://github.com/nikala-ui/folio-algolia#readme",
+  "bugs": {
+    "url": "https://github.com/nikala-ui/folio-algolia/issues"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test tests",
+    "check": "bun run typecheck && bun run test && bun run build",
+    "package:check": "bun run check && npm pack --dry-run"
+  },
+  "peerDependencies": {
+    "@nikala-ui/folio": ">=0.13.2"
+  },
+  "devDependencies": {
+    "@nikala-ui/folio": "^0.13.2",
+    "typescript": "^7.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
