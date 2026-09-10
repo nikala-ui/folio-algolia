@@ -10,7 +10,7 @@ Folio.
 
 ## Requirements
 
-- Folio `0.13.2` or newer;
+- Folio `0.14.0` or newer;
 - an Algolia index containing the same page URLs used by Folio;
 - an Algolia Search-Only API key.
 
@@ -159,15 +159,25 @@ const adapter = createAlgoliaAdapter({
 });
 ```
 
-For environment-based setup, the equivalent factory is available:
+Most Folio sites should use the exported `algoliaAdapter` instance instead.
+
+## Migration from 0.1.x
+
+Version `0.2.0` adds the server-only indexing entrypoint at
+`@nikala-ui/folio-algolia/indexing` and requires Folio `0.14.0` or newer for
+the configured content-directory workflow. Existing browser-side adapter
+configuration remains compatible:
 
 ```ts
-import { createAlgoliaAdapterFromEnv } from "@nikala-ui/folio-algolia";
+import { algoliaAdapter } from "@nikala-ui/folio-algolia";
 
-const adapter = createAlgoliaAdapterFromEnv();
+export default {
+  search: {
+    enabled: true,
+    provider: algoliaAdapter,
+  },
+};
 ```
-
-Most Folio sites should use the exported `algoliaAdapter` instance instead.
 
 ## Matching behavior
 

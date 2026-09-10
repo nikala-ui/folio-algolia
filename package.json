@@ -1,6 +1,6 @@
 {
   "name": "@nikala-ui/folio-algolia",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Algolia search adapter for Folio documentation sites",
   "license": "MIT",
   "type": "module",
@@ -35,10 +35,10 @@
     "package:check": "bun run check && npm pack --dry-run"
   },
   "peerDependencies": {
-    "@nikala-ui/folio": ">=0.13.2"
+    "@nikala-ui/folio": ">=0.14.0"
   },
   "devDependencies": {
-    "@nikala-ui/folio": "^0.13.2",
+    "@nikala-ui/folio": "^0.14.0",
     "typescript": "^7.0.2"
   },
   "publishConfig": {
