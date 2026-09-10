@@ -130,8 +130,22 @@ bun run scripts/index-search.ts
 
 The current sync operation uses Algolia's `updateObject` batch action, so
 re-running it safely updates existing records and creates missing records.
-Deletion of records that no longer exist in the page catalog requires the
-future full-synchronization operation.
+
+Use full synchronization when records removed from the documentation should
+also be removed from Algolia:
+
+```ts
+const summary = await indexer.sync(pages, {
+  mode: "full",
+});
+```
+
+Full synchronization browses existing Algolia `objectID` values, compares
+them with the current Folio catalog, and deletes stale records. Transient
+`408`, `429`, and `5xx` responses are retried automatically. Configure
+`maxRetries` and `retryDelayMs` when the deployment environment needs a
+different policy. Use `continueOnError: true` only when the caller wants a
+summary containing failed batch counts instead of stopping at the first error.
 
 ## Manual adapter construction
 

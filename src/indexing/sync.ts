@@ -1,11 +1,12 @@
 import { toAlgoliaRecord } from "../records.js";
 import type { FolioPage } from "../types.js";
-import { uploadBatch } from "./client.js";
+import { browseObjectIDs, deleteBatch, uploadBatch } from "./client.js";
 import { AlgoliaIndexingError } from "./errors.js";
 import type {
   AlgoliaIndexer,
   AlgoliaIndexerOptions,
   AlgoliaSyncOptions,
+  AlgoliaSyncMode,
   AlgoliaSyncSummary,
 } from "./types.js";
 
@@ -27,6 +28,22 @@ function splitIntoBatches<T>(items: T[], size: number): T[][] {
   return batches;
 }
 
+function createSummary(
+  total: number,
+  batches: number,
+  dryRun: boolean,
+): AlgoliaSyncSummary {
+  return {
+    total,
+    batches,
+    uploaded: 0,
+    deleted: 0,
+    deleteBatches: 0,
+    failed: 0,
+    dryRun,
+  };
+}
+
 export function createAlgoliaIndexer(options: AlgoliaIndexerOptions): AlgoliaIndexer {
   const batchSize = options.batchSize ?? DEFAULT_BATCH_SIZE;
   if (!Number.isInteger(batchSize) || batchSize < 1) {
@@ -39,25 +56,41 @@ export function createAlgoliaIndexer(options: AlgoliaIndexerOptions): AlgoliaInd
 
       const records = pages.map(toAlgoliaRecord);
       const batches = splitIntoBatches(records, batchSize);
-      if (syncOptions.dryRun || records.length === 0) {
-        return {
-          total: records.length,
-          batches: batches.length,
-          uploaded: 0,
-          dryRun: Boolean(syncOptions.dryRun),
-        };
-      }
+      const mode: AlgoliaSyncMode = syncOptions.mode ?? "upsert";
+      const summary = createSummary(records.length, batches.length, Boolean(syncOptions.dryRun));
 
       for (const batch of batches) {
-        await uploadBatch(options, batch);
+        if (syncOptions.dryRun) continue;
+        try {
+          await uploadBatch(options, batch);
+          summary.uploaded += batch.length;
+        } catch (error) {
+          summary.failed += batch.length;
+          if (!syncOptions.continueOnError) throw error;
+        }
       }
 
-      return {
-        total: records.length,
-        batches: batches.length,
-        uploaded: records.length,
-        dryRun: false,
-      };
+      if (mode !== "full" || summary.failed > 0) return summary;
+
+      const remoteObjectIDs = await browseObjectIDs(options);
+      const desiredObjectIDs = new Set(records.map((record) => String(record.objectID)));
+      const staleObjectIDs = remoteObjectIDs.filter((objectID) => !desiredObjectIDs.has(objectID));
+      const deleteBatches = splitIntoBatches(staleObjectIDs, batchSize);
+      summary.deleteBatches = deleteBatches.length;
+
+      for (const deleteBatchObjectIDs of deleteBatches) {
+        if (syncOptions.dryRun) continue;
+        try {
+          await deleteBatch(options, deleteBatchObjectIDs);
+          summary.deleted += deleteBatchObjectIDs.length;
+        } catch (error) {
+          summary.failed += deleteBatchObjectIDs.length;
+          if (!syncOptions.continueOnError) throw error;
+        }
+      }
+
+      if (syncOptions.dryRun) summary.deleted = staleObjectIDs.length;
+      return summary;
     },
   };
 }

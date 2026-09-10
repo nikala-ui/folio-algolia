@@ -5,5 +5,6 @@ export type {
   AlgoliaIndexer,
   AlgoliaIndexerOptions,
   AlgoliaSyncOptions,
+  AlgoliaSyncMode,
   AlgoliaSyncSummary,
 } from "./types.js";
