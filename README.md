@@ -88,11 +88,8 @@ Create a script in the consuming Folio project, for example
 
 ```ts
 import path from "node:path";
-import {
-  DEFAULT_DOCS_CONFIG,
-  loadConfig,
-  scanContent,
-} from "@nikala-ui/folio";
+import { DEFAULT_DOCS_CONFIG, loadConfig } from "@nikala-ui/folio/config";
+import { scanContent } from "@nikala-ui/folio/content";
 import {
   createAlgoliaIndexer,
   getAlgoliaIndexerOptions,
