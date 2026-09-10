@@ -10,7 +10,7 @@ Folio.
 
 ## Requirements
 
-- Folio `0.13.2` or newer;
+- Folio `0.14.0` or newer;
 - an Algolia index containing the same page URLs used by Folio;
 - an Algolia Search-Only API key.
 
@@ -66,8 +66,10 @@ are public by design; use only a Search-Only key.
 
 ## Index records
 
-Use the Folio page URL as Algolia's stable object ID. The helper preserves the
-page metadata needed by Folio:
+The indexing entrypoint is server-only. It accepts the page catalog produced by
+Folio and uploads records with an Algolia Admin API key. Use the Folio page URL
+as Algolia's stable object ID. The helper preserves the page metadata needed
+by Folio:
 
 ```ts
 import { toAlgoliaRecord } from "@nikala-ui/folio-algolia";
@@ -79,8 +81,68 @@ The generated record contains `objectID`, `url`, `slug`, `title`,
 `description`, `metadata` (frontmatter), and `headings` (table-of-contents
 text).
 
-Indexing is intentionally not part of this package. Run indexing from a
-separate trusted server or CI job with an Algolia Admin key.
+## Synchronize the index
+
+Create a script in the consuming Folio project, for example
+`scripts/index-search.ts`:
+
+```ts
+import path from "node:path";
+import { DEFAULT_DOCS_CONFIG, loadConfig } from "@nikala-ui/folio/config";
+import { scanContent } from "@nikala-ui/folio/content";
+import {
+  createAlgoliaIndexer,
+  getAlgoliaIndexerOptions,
+} from "@nikala-ui/folio-algolia/indexing";
+
+const projectRoot = process.cwd();
+const config = await loadConfig(projectRoot);
+const contentDir = path.resolve(
+  projectRoot,
+  config.contentDir ?? DEFAULT_DOCS_CONFIG.contentDir,
+);
+const pages = await scanContent(contentDir);
+const indexer = createAlgoliaIndexer(getAlgoliaIndexerOptions());
+const dryRun = process.argv.includes("--dry-run");
+const summary = await indexer.sync(pages, { dryRun });
+
+console.log(summary);
+```
+
+The indexing script runs outside the browser and reads these server-only
+variables:
+
+```bash
+ALGOLIA_APP_ID=your_application_id
+ALGOLIA_ADMIN_API_KEY=your_admin_key
+ALGOLIA_INDEX=your_index_name
+```
+
+Run a write-free validation first, then perform the upload:
+
+```bash
+bun run scripts/index-search.ts --dry-run
+bun run scripts/index-search.ts
+```
+
+The current sync operation uses Algolia's `updateObject` batch action, so
+re-running it safely updates existing records and creates missing records.
+
+Use full synchronization when records removed from the documentation should
+also be removed from Algolia:
+
+```ts
+const summary = await indexer.sync(pages, {
+  mode: "full",
+});
+```
+
+Full synchronization browses existing Algolia `objectID` values, compares
+them with the current Folio catalog, and deletes stale records. Transient
+`408`, `429`, and `5xx` responses are retried automatically. Configure
+`maxRetries` and `retryDelayMs` when the deployment environment needs a
+different policy. Use `continueOnError: true` only when the caller wants a
+summary containing failed batch counts instead of stopping at the first error.
 
 ## Manual adapter construction
 
@@ -97,15 +159,25 @@ const adapter = createAlgoliaAdapter({
 });
 ```
 
-For environment-based setup, the equivalent factory is available:
+Most Folio sites should use the exported `algoliaAdapter` instance instead.
+
+## Migration from 0.1.x
+
+Version `0.2.0` adds the server-only indexing entrypoint at
+`@nikala-ui/folio-algolia/indexing` and requires Folio `0.14.0` or newer for
+the configured content-directory workflow. Existing browser-side adapter
+configuration remains compatible:
 
 ```ts
-import { createAlgoliaAdapterFromEnv } from "@nikala-ui/folio-algolia";
+import { algoliaAdapter } from "@nikala-ui/folio-algolia";
 
-const adapter = createAlgoliaAdapterFromEnv();
+export default {
+  search: {
+    enabled: true,
+    provider: algoliaAdapter,
+  },
+};
 ```
-
-Most Folio sites should use the exported `algoliaAdapter` instance instead.
 
 ## Matching behavior
 
@@ -139,9 +211,9 @@ bun run build
 ```
 
 The package contains the Folio adapter contract, Algolia query client,
-environment resolution, and record mapping. Index creation, crawling, admin
-credentials, and deployment belong in the consuming project or a separate
-indexing service.
+server-side batch indexing, environment resolution, and record mapping.
+Crawling and deployment orchestration remain in the consuming project or a
+separate indexing service.
 
 ## License
 
