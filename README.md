@@ -66,8 +66,10 @@ are public by design; use only a Search-Only key.
 
 ## Index records
 
-Use the Folio page URL as Algolia's stable object ID. The helper preserves the
-page metadata needed by Folio:
+The indexing entrypoint is server-only. It accepts the page catalog produced by
+Folio and uploads records with an Algolia Admin API key. Use the Folio page URL
+as Algolia's stable object ID. The helper preserves the page metadata needed
+by Folio:
 
 ```ts
 import { toAlgoliaRecord } from "@nikala-ui/folio-algolia";
@@ -79,8 +81,57 @@ The generated record contains `objectID`, `url`, `slug`, `title`,
 `description`, `metadata` (frontmatter), and `headings` (table-of-contents
 text).
 
-Indexing is intentionally not part of this package. Run indexing from a
-separate trusted server or CI job with an Algolia Admin key.
+## Synchronize the index
+
+Create a script in the consuming Folio project, for example
+`scripts/index-search.ts`:
+
+```ts
+import path from "node:path";
+import {
+  DEFAULT_DOCS_CONFIG,
+  loadConfig,
+  scanContent,
+} from "@nikala-ui/folio";
+import {
+  createAlgoliaIndexer,
+  getAlgoliaIndexerOptions,
+} from "@nikala-ui/folio-algolia/indexing";
+
+const projectRoot = process.cwd();
+const config = await loadConfig(projectRoot);
+const contentDir = path.resolve(
+  projectRoot,
+  config.contentDir ?? DEFAULT_DOCS_CONFIG.contentDir,
+);
+const pages = await scanContent(contentDir);
+const indexer = createAlgoliaIndexer(getAlgoliaIndexerOptions());
+const dryRun = process.argv.includes("--dry-run");
+const summary = await indexer.sync(pages, { dryRun });
+
+console.log(summary);
+```
+
+The indexing script runs outside the browser and reads these server-only
+variables:
+
+```bash
+ALGOLIA_APP_ID=your_application_id
+ALGOLIA_ADMIN_API_KEY=your_admin_key
+ALGOLIA_INDEX=your_index_name
+```
+
+Run a write-free validation first, then perform the upload:
+
+```bash
+bun run scripts/index-search.ts --dry-run
+bun run scripts/index-search.ts
+```
+
+The current sync operation uses Algolia's `updateObject` batch action, so
+re-running it safely updates existing records and creates missing records.
+Deletion of records that no longer exist in the page catalog requires the
+future full-synchronization operation.
 
 ## Manual adapter construction
 
@@ -139,9 +190,9 @@ bun run build
 ```
 
 The package contains the Folio adapter contract, Algolia query client,
-environment resolution, and record mapping. Index creation, crawling, admin
-credentials, and deployment belong in the consuming project or a separate
-indexing service.
+server-side batch indexing, environment resolution, and record mapping.
+Crawling and deployment orchestration remain in the consuming project or a
+separate indexing service.
 
 ## License
 
