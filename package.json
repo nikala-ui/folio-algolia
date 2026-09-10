@@ -20,6 +20,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./indexing": {
+      "types": "./dist/indexing/index.d.ts",
+      "import": "./dist/indexing/index.js"
     }
   },
   "files": ["dist"],
