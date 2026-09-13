@@ -43,6 +43,10 @@ export default {
 The adapter implements Folio's `SearchAdapter` contract. The configuration
 contains no Algolia request logic and no indexing code.
 
+The adapter also declares a browser runtime descriptor. Folio uses that
+descriptor to load only the browser-safe adapter module; the consumer's full
+`docs.config.ts` and server-only indexing code are not bundled into the site.
+
 ## Environment variables
 
 Create a `.env` file in the documentation project:
