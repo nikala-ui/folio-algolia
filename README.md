@@ -10,7 +10,7 @@ Folio.
 
 ## Requirements
 
-- Folio `0.14.0` or newer;
+- Folio `0.15.0` or newer;
 - an Algolia index containing the same page URLs used by Folio;
 - an Algolia Search-Only API key.
 
@@ -42,6 +42,10 @@ export default {
 
 The adapter implements Folio's `SearchAdapter` contract. The configuration
 contains no Algolia request logic and no indexing code.
+
+The adapter also declares a browser runtime descriptor. Folio uses that
+descriptor to load only the browser-safe adapter module; the consumer's full
+`docs.config.ts` and server-only indexing code are not bundled into the site.
 
 ## Environment variables
 
@@ -163,10 +167,10 @@ Most Folio sites should use the exported `algoliaAdapter` instance instead.
 
 ## Migration from 0.1.x
 
-Version `0.2.0` adds the server-only indexing entrypoint at
-`@nikala-ui/folio-algolia/indexing` and requires Folio `0.14.0` or newer for
-the configured content-directory workflow. Existing browser-side adapter
-configuration remains compatible:
+Version `0.3.0` adds the browser runtime descriptor and requires Folio
+`0.15.0` or newer. The server-only indexing entrypoint from `0.2.0` remains
+available at `@nikala-ui/folio-algolia/indexing`. Existing browser-side
+adapter configuration remains compatible:
 
 ```ts
 import { algoliaAdapter } from "@nikala-ui/folio-algolia";

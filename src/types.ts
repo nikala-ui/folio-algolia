@@ -27,6 +27,11 @@ export interface FolioSearchContext {
 export interface FolioSearchAdapter {
   name: string;
   search: (context: FolioSearchContext) => PageData[] | Promise<PageData[]>;
+  runtime?: {
+    module: string;
+    exportName: string;
+    options?: unknown;
+  };
 }
 
 export type FolioPage = PageData;
