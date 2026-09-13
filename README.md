@@ -167,10 +167,10 @@ Most Folio sites should use the exported `algoliaAdapter` instance instead.
 
 ## Migration from 0.1.x
 
-Version `0.2.0` adds the server-only indexing entrypoint at
-`@nikala-ui/folio-algolia/indexing`. The browser runtime descriptor requires
-Folio `0.15.0` or newer. Existing browser-side adapter configuration remains
-compatible:
+Version `0.3.0` adds the browser runtime descriptor and requires Folio
+`0.15.0` or newer. The server-only indexing entrypoint from `0.2.0` remains
+available at `@nikala-ui/folio-algolia/indexing`. Existing browser-side
+adapter configuration remains compatible:
 
 ```ts
 import { algoliaAdapter } from "@nikala-ui/folio-algolia";
