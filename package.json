@@ -42,7 +42,7 @@
     "@nikala-ui/folio": ">=0.15.0"
   },
   "devDependencies": {
-    "@nikala-ui/folio": "^0.14.0",
+    "@nikala-ui/folio": "^0.15.1",
     "typescript": "^7.0.2"
   },
   "publishConfig": {
